@@ -3,7 +3,7 @@
 
 from string import Template
 from copy import copy
-from urllib import urlencode
+from urllib import urlencode, quote
 
 class Model(object):
     def __init__(self):
@@ -12,6 +12,9 @@ class Model(object):
 
     @classmethod
     def query(cls, conn, pattern, method, suffix='', body=None, **kwargs):
+        for key in kwargs:
+            value = quote(kwargs[key], safe='')
+            kwargs[key] = value
         url = Template(pattern).substitute(**kwargs)
         url += suffix
 
@@ -19,6 +22,7 @@ class Model(object):
         if method == 'POST' or method == 'PUT':
             headers['Content-Type'] = 'application/x-www-form-urlencoded'
 
+        print method, url, body, headers
         return conn.request(method, url, body, headers)
 
     def _query(self, method, suffix='', body=None):
@@ -47,6 +51,7 @@ class Model(object):
     @classmethod
     def find(cls, conn, **kwargs):
         resp, data = cls.query(conn, cls.INSTANCE_PATTERN, 'GET', **kwargs)
+        print 'resp', resp
         obj = cls.construct_instance(data)
         obj.conn = conn
         return obj
@@ -75,7 +80,6 @@ class Version(Model):
     def check_backends(self):
         resp, data = self._query('GET', '/backend/check_all')
         return data
-        
 
 class Domain(Model):
     COLLECTION_PATTERN = Version.COLLECTION_PATTERN + '/$version/domain'

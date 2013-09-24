@@ -9,6 +9,7 @@ class InternalServerError(Exception):
 
 class BadRequestError(Exception):
     def __init__(self, reason):
+        print 'reason', reason
         self.reason = reason
 
     def __str__(self):
